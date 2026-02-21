@@ -5,13 +5,17 @@ import { Page, Locator } from "@playwright/test";
  *
  * Selectors are app-specific (update them when switching apps).
  * The login FLOW and verification logic is app-agnostic:
- *   - loginAs() waits for the browser to navigate away from the login path.
- *   - isLoggedIn() checks the current URL — no dependency on any DOM element.
+ *   - loginAs()       full login: navigate → fill → submit → wait for redirect (expects success)
+ *   - login()         partial login: navigate → fill → submit (no URL wait — use for failure cases)
+ *   - isLoggedIn()    URL-based check — true if browser has left the login page
+ *   - getErrorMessage() returns the error banner text (e.g. locked-out message)
  *
  * Public API:
  *   goto()                        → navigate to the login page (no login)
+ *   login(username, password)     → fills + clicks only, no wait (use when testing login failures)
  *   loginAs(username, password)   → full login: navigate → fill → submit → wait for redirect
- *   isLoggedIn()                  → returns true if the browser has left the login page
+ *   isLoggedIn()                  → true if the browser has left the login page
+ *   getErrorMessage()             → error banner text, or null if not present
  */
 export class LoginPage {
   // ── Selectors (update these when switching apps) ──────────────────────────
@@ -24,7 +28,7 @@ export class LoginPage {
    * @param loginPath   - URL path of the login page (default: "/")
    */
   constructor(
-    private readonly page: Page,
+    readonly page: Page,
     private readonly loginPath: string = "/",
   ) {
     this.usernameInput = page.locator('input[data-test="username"]');
@@ -35,6 +39,18 @@ export class LoginPage {
   /** Navigate to the login page without logging in. */
   async goto(): Promise<void> {
     await this.page.goto(this.loginPath);
+  }
+
+  /**
+   * Navigate → fill credentials → click login.
+   * Does NOT wait for a URL change — use this when testing failure scenarios
+   * (e.g. locked-out user) where the page stays on the login path.
+   */
+  async login(username: string, password: string): Promise<void> {
+    await this.page.goto(this.loginPath);
+    await this.usernameInput.fill(username);
+    await this.passwordInput.fill(password);
+    await this.loginButton.click();
   }
 
   /**
@@ -63,5 +79,15 @@ export class LoginPage {
   async isLoggedIn(): Promise<boolean> {
     const currentPath = new URL(this.page.url()).pathname;
     return currentPath !== this.loginPath;
+  }
+
+  /**
+   * Returns the text of the error banner shown after a failed login attempt,
+   * or null if no error is currently visible.
+   */
+  async getErrorMessage(): Promise<string | null> {
+    const errorLocator = this.page.locator('[data-test="error"]');
+    const isVisible = await errorLocator.isVisible();
+    return isVisible ? await errorLocator.innerText() : null;
   }
 }

@@ -3,45 +3,63 @@ import { LoginPage } from "../pages/LoginPage";
 import { USERS } from "../data/users";
 
 /**
- * appPage(usernameKey?) → LoginPage
+ * user  (option)   – key from src/data/users.ts, default '' = no login
+ * appPage (fixture) – automatically logs in (or just navigates) before the
+ *                     test body runs. No factory calls needed inside tests.
  *
- * Called WITHOUT a key → navigates to the login page only (no login)
- * Called WITH a key   → navigates + logs in + waits for Products page
+ * Usage in tests:
  *
- * Available keys (defined in src/data/users.ts):
- *   "standard_user" | "problem_user" | "locked_out_user" | "performance_glitch_user"
+ *   // Log in as a specific user for an entire describe block
+ *   test.use({ user: "standard_user" });
  *
- * Usage:
- *   const page = await appPage();                 // fresh login page
- *   const page = await appPage("standard_user");  // already logged in
+ *   // Inside the test – appPage is already authenticated
+ *   test("can see products", async ({ appPage }) => {
+ *     expect(await appPage.isLoggedIn()).toBe(true);
+ *   });
+ *
+ *   // For unauthenticated tests omit test.use – user defaults to ''
+ *   test("login page shown when not logged in", async ({ appPage }) => {
+ *     expect(await appPage.isLoggedIn()).toBe(false);
+ *   });
  */
 
 type TestFixtures = {
-  appPage: (usernameKey?: string) => Promise<LoginPage>;
+  /** Key from USERS map. Empty string = navigate to login page without logging in. */
+  user: string;
+  /** Ready-to-use LoginPage. Already logged in when user option is set. */
+  appPage: LoginPage;
 };
 
 export const test = base.extend<TestFixtures>({
-  appPage: async ({ page }, use) => {
-    // Provide a function the test calls to get a LoginPage
-    await use(async (usernameKey?: string) => {
-      const loginPage = new LoginPage(page);
+  // ── Option: which user to authenticate as ─────────────────────────────────
+  // Test-scoped option → test.use({ user }) works inside describe blocks too.
+  user: ["", { option: true }],
 
-      if (usernameKey) {
-        // Login: look up credentials → navigate → fill → submit → wait
-        const user = USERS[usernameKey];
-        if (!user) {
-          throw new Error(
-            `User "${usernameKey}" not found. Check src/data/users.ts`,
-          );
-        }
-        await loginPage.loginAs(user.username, user.password);
-      } else {
-        // No login: just navigate to the login page
-        await loginPage.goto();
+  // ── Fixture: runs automatically before every test body ────────────────────
+  appPage: async ({ page, user }, use) => {
+    const loginPage = new LoginPage(page);
+
+    if (user) {
+      const credentials = USERS[user];
+      if (!credentials) {
+        throw new Error(
+          `User "${user}" not found in src/data/users.ts. ` +
+            `Available: ${Object.keys(USERS).join(", ")}`,
+        );
       }
+      // Navigates → fills → submits → waits for redirect → waits for network idle
+      await loginPage.loginAs(credentials.username, credentials.password);
+    } else {
+      // No user set – just land on the login page (unauthenticated tests)
+      await loginPage.goto();
+    }
 
-      return loginPage;
-    });
+    // Hand the ready page object to the test
+    await use(loginPage);
+
+    // ── Teardown (runs after the test body) ───────────────────────────────
+    // Nothing to clean up – Playwright closes the page automatically.
+    // Add explicit logout here if the app requires it between tests.
   },
 });
 
