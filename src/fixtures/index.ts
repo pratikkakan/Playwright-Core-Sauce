@@ -1,13 +1,15 @@
 import { test as base, expect } from "@playwright/test";
+import { POManager } from "@framework/pages/POManager";
 import { LoginPage } from "../pages/LoginPage";
 import { USERS } from "../data/users";
-  
-type TestFixtures = {
+
+type MyFixtures = {
   user: string;
   authStage: LoginPage;
+  poManager: POManager;
 };
 
-export const test = base.extend<TestFixtures>({
+export const test = base.extend<MyFixtures>({
   // ── Option: which user to authenticate as ────────────────────────
   user: ["", { option: true }],
 
@@ -35,6 +37,11 @@ export const test = base.extend<TestFixtures>({
     },
     { auto: true }, // ← runs before every test, no need to declare in test args
   ],
+
+  poManager: async ({ page }, use) => {
+    const poManager = new POManager(page);
+    await use(poManager);
+  },
 });
 
 export { expect };
