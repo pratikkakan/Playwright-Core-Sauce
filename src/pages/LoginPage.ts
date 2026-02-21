@@ -30,7 +30,9 @@ export class LoginPage {
   constructor(
     readonly page: Page,
     private readonly loginPath: string = "/",
-  ) {
+  )
+   
+  {
     this.usernameInput = page.locator('input[data-test="username"]');
     this.passwordInput = page.locator('input[data-test="password"]');
     this.loginButton = page.locator('input[data-test="login-button"]');

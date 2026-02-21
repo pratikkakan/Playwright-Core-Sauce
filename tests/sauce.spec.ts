@@ -1,4 +1,5 @@
 import { test, expect } from "../src/fixtures/index";
+import { POManager } from "@framework/pages/POManager";
 
 const users = [
   "standard_user",
@@ -11,18 +12,25 @@ test.describe.parallel("First Test - All Users", () => {
     test.describe(`${user}`, () => {
       test.use({ user });
 
+      // ✅ No authStage in args — fixture runs automatically
       test("User is able to log in and see inventory items", async ({
         page,
       }) => {
-        const items = page.locator(".inventory_item");
-        await expect(items).toHaveCount(6);
+        const poManager = new POManager(page);
+        const items = await poManager
+          .getInventoryPage()
+          .getInventoryItemsCount();
+        // const items = inventoryPage.getInventoryItems();
+        await expect(items).toEqual(6);
       });
 
       test("Verify the user is able to see the links available in the page", async ({
         page,
       }) => {
-        const allLinks = page.locator("a");
-        await expect(allLinks).toHaveCount(4);
+        const poManager = new POManager(page);
+        const items = await poManager.getInventoryPage().getAllLinksCount();
+        // const allLinks = page.locator("a");
+        await expect(items).toEqual(4);
       });
     });
   }
