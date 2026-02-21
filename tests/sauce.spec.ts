@@ -14,14 +14,14 @@ for (const user of users) {
       poManager,
     }) => {
       const items = await poManager.getInventoryPage().getInventoryItemsCount();
-      await expect(items).toEqual(6);
+      expect(items).toEqual(6);
     });
 
     test("Verify the user is able to see the links available in the page", async ({
       poManager,
     }) => {
       const items = await poManager.getInventoryPage().getAllLinksCount();
-      await expect(items).toEqual(4);
+      expect(items).toEqual(4);
     });
   });
 }
