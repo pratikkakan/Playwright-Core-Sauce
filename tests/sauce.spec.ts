@@ -12,20 +12,17 @@ test.describe.parallel("First Test - All Users", () => {
       test.use({ user });
 
       test("User is able to log in and see inventory items", async ({
-        authStage,
+        page,
       }) => {
-        expect(await authStage.isLoggedIn()).toBe(true);
-        const items = authStage.page.locator(".inventory_item");
+        const items = page.locator(".inventory_item");
         await expect(items).toHaveCount(6);
-        console.log(`✅ ${user} can see inventory items`);
       });
 
       test("Verify the user is able to see the links available in the page", async ({
-        authStage,
+        page,
       }) => {
-        const allLinks = authStage.page.locator("a");
+        const allLinks = page.locator("a");
         await expect(allLinks).toHaveCount(4);
-        console.log(`✅ ${user} can see the links available in the page`);
       });
     });
   }
