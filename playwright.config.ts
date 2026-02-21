@@ -2,40 +2,25 @@ import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
 import path from "path";
 
-// ─── Load environment variables ───────────────────────────────────────────────
+// ─── Load environment variables ─────
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
-
 const BASE_URL = process.env.BASE_URL ?? "https://www.saucedemo.com";
 
-// ─── Playwright Configuration ─────────────────────────────────────────────────
+// ─── Playwright Configuration ───
 export default defineConfig({
-  // ── Test Discovery ──────────────────────────────────────────────────────────
   testDir: "./tests",
   testMatch: "**/*.spec.ts",
 
-  // ── Parallelism ─────────────────────────────────────────────────────────────
+  // ── Parallelism ───
   fullyParallel: true,
   workers: process.env.CI ? 2 : 4,
-  retries: process.env.CI ? 2 : 0,
+//   retries: process.env.CI ? 2 : 0,
 
-  // ── Timeout ─────────────────────────────────────────────────────────────────
-  timeout: 60_000,
-  expect: { timeout: 10_000 },
-
-  // ── Reporting ───────────────────────────────────────────────────────────────
-  reporter: [
-    ["list"],
-    ["html", { outputFolder: "playwright-report", open: "never" }],
-    ["json", { outputFile: "test-results/results.json" }],
-    ...(process.env.CI ? [["github"] as ["github"]] : []),
-  ],
-
-  // ── Output ──────────────────────────────────────────────────────────────────
-  outputDir: "test-results",
-
-  // ── Shared Test Options ─────────────────────────────────────────────────────
+  // ── Shared Test Options ──────
   use: {
     baseURL: BASE_URL,
+    navigationTimeout: 30_000,
+    actionTimeout: 10_000,
 
     // Browser context
     viewport: { width: 1280, height: 720 },
@@ -51,10 +36,11 @@ export default defineConfig({
     timezoneId: "America/New_York",
   },
 
-  // ── Global Setup / Teardown ──────────────────────────────────────────────────
+  // ── Global Setup / Teardown ───────
   globalSetup: "./src/config/global.setup.ts",
+  globalTeardown: "./src/config/global.teardown.ts",
 
-  // ── Projects (Browsers) ─────────────────────────────────────────────────────
+  // ── Projects (Browsers) ───────
   projects: [
     {
       name: "chromium",
