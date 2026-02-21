@@ -3,19 +3,17 @@ import { LoginPage } from "../pages/LoginPage";
 import { USERS } from "../data/users";
 
 /**
- * Custom fixtures for Sauce Demo tests.
+ * appPage(usernameKey?) → LoginPage
  *
- * appPage(usernameKey?)  →  LoginPage instance
+ * Called WITHOUT a key → navigates to the login page only (no login)
+ * Called WITH a key   → navigates + logs in + waits for Products page
  *
- *   Called WITHOUT a key  → navigates to the login page only (no login)
- *   Called WITH a key     → navigates, logs in as that user, waits for Products page
- *
- * Available user keys (defined in src/data/users.ts):
+ * Available keys (defined in src/data/users.ts):
  *   "standard_user" | "problem_user" | "locked_out_user" | "performance_glitch_user"
  *
- * Example usage:
- *   const page  = await appPage();                  // fresh login page
- *   const page  = await appPage("standard_user");   // already logged in
+ * Usage:
+ *   const page = await appPage();                 // fresh login page
+ *   const page = await appPage("standard_user");  // already logged in
  */
 
 type TestFixtures = {
@@ -24,18 +22,21 @@ type TestFixtures = {
 
 export const test = base.extend<TestFixtures>({
   appPage: async ({ page }, use) => {
+    // Provide a function the test calls to get a LoginPage
     await use(async (usernameKey?: string) => {
       const loginPage = new LoginPage(page);
 
       if (usernameKey) {
+        // Login: look up credentials → navigate → fill → submit → wait
         const user = USERS[usernameKey];
         if (!user) {
           throw new Error(
-            `User "${usernameKey}" not found. Check src/data/users.ts for valid keys.`,
+            `User "${usernameKey}" not found. Check src/data/users.ts`,
           );
         }
         await loginPage.loginAs(user.username, user.password);
       } else {
+        // No login: just navigate to the login page
         await loginPage.goto();
       }
 

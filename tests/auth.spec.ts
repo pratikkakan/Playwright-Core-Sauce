@@ -1,6 +1,5 @@
 import { test, expect } from "../src/fixtures/index";
 
-
 test.describe("Auth - Login Tests", () => {
   test("standard_user can log in", async ({ appPage }) => {
     const page = await appPage("standard_user");
