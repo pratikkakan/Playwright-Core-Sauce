@@ -19,6 +19,12 @@ export default defineConfig({
   testDir: "./tests",
   testMatch: "**/*.spec.ts",
 
+  // ── Reporters ────────────────────────────────────────────────
+  reporter: [
+    ["html", { outputFolder: "playwright-report", open: "on-failure" }],
+    ["list"],
+  ],
+
   // ── Parallelism ───
   fullyParallel: true,
   workers: process.env.CI ? 2 : 3,
