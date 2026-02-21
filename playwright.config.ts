@@ -13,7 +13,8 @@ export default defineConfig({
 
   // ── Parallelism ───
   fullyParallel: true,
-  workers: process.env.CI ? 2 : 1,
+  workers: process.env.CI ? 2 : 3,
+  
   // ── Shared Test Options ──────
   use: {
     baseURL: BASE_URL,
