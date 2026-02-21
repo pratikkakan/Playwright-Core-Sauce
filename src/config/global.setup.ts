@@ -1,11 +1,15 @@
 import dotenv from "dotenv";
 import * as path from "path";
-import * as fs from "fs";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-const BASE_URL = process.env.BASE_URL ?? "https://www.saucedemo.com";
-const AUTH_DIR = path.join(process.cwd(), ".auth");
+if (!process.env.BASE_URL) {
+  throw new Error(
+    "BASE_URL is not set. Copy .env.example to .env and fill in the values.",
+  );
+}
+
+const BASE_URL = process.env.BASE_URL;
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
 
@@ -32,7 +36,6 @@ async function checkAppHealth(url: string): Promise<boolean> {
 async function globalSetup(): Promise<void> {
   console.log("🔧 Global Setup: Starting...");
 
-  // 1. Health check - verify app is reachable
   const isAppHealthy = await checkAppHealth(BASE_URL);
   if (!isAppHealthy) {
     throw new Error(
@@ -40,12 +43,7 @@ async function globalSetup(): Promise<void> {
     );
   }
 
-  // 2. Ensure .auth directory exists
-  if (!fs.existsSync(AUTH_DIR)) {
-    fs.mkdirSync(AUTH_DIR, { recursive: true });
-  }
-
-  console.log("✅ Global Setup: Complete (tests will login on-demand)");
+  console.log("✅ Global Setup: Complete");
 }
 
 export default globalSetup;

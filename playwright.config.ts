@@ -3,8 +3,16 @@ import dotenv from "dotenv";
 import path from "path";
 
 // ─── Load environment variables ─────
+// All environment-specific values (URL, credentials) live in .env — see .env.example
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
-const BASE_URL = "https://www.saucedemo.com";
+
+if (!process.env.BASE_URL) {
+  throw new Error(
+    "BASE_URL is not set. Copy .env.example to .env and fill in the values.",
+  );
+}
+
+const BASE_URL = process.env.BASE_URL;
 
 // ─── Playwright Configuration ───
 export default defineConfig({
@@ -14,7 +22,7 @@ export default defineConfig({
   // ── Parallelism ───
   fullyParallel: true,
   workers: process.env.CI ? 2 : 3,
-  
+
   // ── Shared Test Options ──────
   use: {
     baseURL: BASE_URL,
@@ -64,7 +72,7 @@ export default defineConfig({
     {
       name: "api",
       use: {
-        baseURL: process.env.API_BASE_URL ?? "https://api.saucedemo.com",
+        baseURL: process.env.API_BASE_URL ?? BASE_URL,
         extraHTTPHeaders: {
           Accept: "application/json",
           "Content-Type": "application/json",
