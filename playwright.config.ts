@@ -4,7 +4,7 @@ import path from "path";
 
 // ─── Load environment variables ─────
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
-const BASE_URL = process.env.BASE_URL ?? "https://www.saucedemo.com";
+const BASE_URL = "https://www.saucedemo.com";
 
 // ─── Playwright Configuration ───
 export default defineConfig({
@@ -13,9 +13,7 @@ export default defineConfig({
 
   // ── Parallelism ───
   fullyParallel: true,
-  workers: process.env.CI ? 2 : 4,
-//   retries: process.env.CI ? 2 : 0,
-
+  workers: process.env.CI ? 2 : 1,
   // ── Shared Test Options ──────
   use: {
     baseURL: BASE_URL,
@@ -44,23 +42,23 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: { ...devices["Desktop Chrome"], headless: false },
     },
     {
       name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
+      use: { ...devices["Desktop Firefox"], headless: false },
     },
     {
       name: "webkit",
-      use: { ...devices["Desktop Safari"] },
+      use: { ...devices["Desktop Safari"], headless: false },
     },
     {
       name: "mobile-chrome",
-      use: { ...devices["Pixel 7"] },
+      use: { ...devices["Pixel 7"], headless: false },
     },
     {
       name: "mobile-safari",
-      use: { ...devices["iPhone 14"] },
+      use: { ...devices["iPhone 14"], headless: false },
     },
     {
       name: "api",

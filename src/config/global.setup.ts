@@ -1,9 +1,6 @@
-import { chromium } from "@playwright/test";
-import * as fs from "fs";
-import * as path from "path";
 import dotenv from "dotenv";
-import { USERS } from "../data/users";
-import { LoginPage } from "../pages/LoginPage";
+import * as path from "path";
+import * as fs from "fs";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
@@ -32,38 +29,6 @@ async function checkAppHealth(url: string): Promise<boolean> {
   return false;
 }
 
-async function authenticateUser(
-  username: string,
-  password: string,
-): Promise<string> {
-  console.log(`👤 Authenticating user: ${username}`);
-
-  const browser = await chromium.launch();
-  const context = await browser.newContext({ baseURL: BASE_URL });
-  const page = await context.newPage();
-
-  try {
-    const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    await loginPage.completeLogin(username, password);
-
-    // Get storage state
-    const storageState = await context.storageState();
-
-    console.log(`✅ Successfully logged in as: ${username}`);
-
-    return JSON.stringify(storageState, null, 2);
-  } catch (error) {
-    console.error(
-      `❌ Failed to authenticate ${username}:`,
-      (error as Error).message,
-    );
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
 async function globalSetup(): Promise<void> {
   console.log("🔧 Global Setup: Starting...");
 
@@ -75,14 +40,12 @@ async function globalSetup(): Promise<void> {
     );
   }
 
-  // 2. Ensure .auth directory exists (for lazy loading during tests)
+  // 2. Ensure .auth directory exists
   if (!fs.existsSync(AUTH_DIR)) {
     fs.mkdirSync(AUTH_DIR, { recursive: true });
   }
 
-  console.log(
-    "✅ Global Setup: Complete (auth states will be created on-demand by tests)",
-  );
+  console.log("✅ Global Setup: Complete (tests will login on-demand)");
 }
 
 export default globalSetup;
