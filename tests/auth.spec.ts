@@ -6,7 +6,7 @@ const users = [
   "performance_glitch_user",
 ] as const;
 
-test.describe("First Test - All Users", () => {
+test.describe.parallel("First Test - All Users", () => {
   for (const user of users) {
     test.describe(`${user}`, () => {
       test.use({ user });
