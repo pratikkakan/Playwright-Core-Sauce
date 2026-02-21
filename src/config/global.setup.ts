@@ -67,7 +67,7 @@ async function authenticateUser(
 async function globalSetup(): Promise<void> {
   console.log("🔧 Global Setup: Starting...");
 
-  // 1. Health check
+  // 1. Health check - verify app is reachable
   const isAppHealthy = await checkAppHealth(BASE_URL);
   if (!isAppHealthy) {
     throw new Error(
@@ -75,27 +75,14 @@ async function globalSetup(): Promise<void> {
     );
   }
 
-  // 2. Ensure .auth directory exists
+  // 2. Ensure .auth directory exists (for lazy loading during tests)
   if (!fs.existsSync(AUTH_DIR)) {
     fs.mkdirSync(AUTH_DIR, { recursive: true });
   }
 
-  // 3. Pre-authenticate all users and save auth states
-  console.log("\n🔐 Pre-authenticating all users...");
-  for (const [key, user] of Object.entries(USERS)) {
-    try {
-      const storageState = await authenticateUser(user.username, user.password);
-      const authFile = path.join(AUTH_DIR, `${user.username}.json`);
-      fs.writeFileSync(authFile, storageState);
-      console.log(`💾 Auth state saved: .auth/${user.username}.json`);
-    } catch (error) {
-      console.warn(
-        `⚠️ Warning: Could not authenticate ${user.username}. Tests may fail for this user.`,
-      );
-    }
-  }
-
-  console.log("\n✅ Global Setup: Complete");
+  console.log(
+    "✅ Global Setup: Complete (auth states will be created on-demand by tests)",
+  );
 }
 
 export default globalSetup;

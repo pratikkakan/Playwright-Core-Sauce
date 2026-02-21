@@ -13,7 +13,9 @@ export class LoginPage {
     this.usernameInput = page.locator('input[data-test="username"]');
     this.passwordInput = page.locator('input[data-test="password"]');
     this.loginButton = page.locator('input[data-test="login-button"]');
-    this.productsTitle = page.locator('span.title:has-text("Products")').first();
+    this.productsTitle = page
+      .locator('span.title:has-text("Products")')
+      .first();
     this.errorMessage = page.locator('[data-test="error"]');
   }
 
@@ -28,8 +30,8 @@ export class LoginPage {
     await this.loginButton.click();
   }
 
-  async loginAsUser(): Promise<void> {
-    await this.login("standard_user", "secret_sauce");
+  async loginAsUser(username: string, password: string): Promise<void> {
+    await this.login(username, password);
   }
 
   async waitForProductsPage(): Promise<void> {
@@ -55,11 +57,9 @@ export class LoginPage {
     }
   }
 
-
-
   // Convenience method for complete login flow
   async completeLogin(username: string, password: string): Promise<void> {
-    await this.login(username, password);
+    await this.loginAsUser(username, password);
     await this.waitForProductsPage();
   }
 }
