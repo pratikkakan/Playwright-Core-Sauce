@@ -1,89 +1,80 @@
 import { defineConfig, devices } from "@playwright/test";
-import dotenv from "dotenv";
-import path from "path";
+import { runConfig } from "./run.config";
 
-// ─── Load environment variables ─────
-// All environment-specific values (URL, credentials) live in .env — see .env.example
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+const allProjects = {
+  chromium: {
+    name: "chromium",
+    use: { ...devices["Desktop Chrome"] },
+  },
+  firefox: {
+    name: "firefox",
+    use: { ...devices["Desktop Firefox"] },
+  },
+  webkit: {
+    name: "webkit",
+    use: { ...devices["Desktop Safari"] },
+  },
+  "mobile-chrome": {
+    name: "mobile-chrome",
+    use: { ...devices["Pixel 5"] },
+  },
+  "mobile-safari": {
+    name: "mobile-safari",
+    use: { ...devices["iPhone 13"] },
+  },
+};
 
-if (!process.env.BASE_URL) {
-  throw new Error(
-    "BASE_URL is not set. Copy .env.example to .env and fill in the values.",
-  );
-}
+type ProjectKey = keyof typeof allProjects;
 
-const BASE_URL = process.env.BASE_URL;
-
-// ─── Playwright Configuration ───
 export default defineConfig({
   testDir: "./tests",
-  testMatch: "**/*.spec.ts",
+  retries: runConfig.retries,
+  workers: runConfig.workers,
+  fullyParallel: runConfig.fullyParallel,
 
-  // ── Reporters ────────────────────────────────────────────────
-  reporter: [
-    ["html", { outputFolder: "playwright-report", open: "on-failure" }],
-    ["list"],
-  ],
+  // ✅ Run only the specified test files if provided
+  ...(runConfig.testFiles.length > 0 && {
+    testMatch: runConfig.testFiles,
+  }),
 
-  // ── Parallelism ───
-  fullyParallel: true,
-  workers: process.env.CI ? 2 : 3,
+  // ✅ Max time for each test to run
+  timeout: 30_000,
 
-  // ── Shared Test Options ──────
+  // ✅ Max time for the whole test suite
+  globalTimeout: 0, // 0 = no limit
+
+  // ✅ Max time for expect() assertions
+  expect: {
+    timeout: 5_000,
+  },
+
+  // ✅ Include tests matching these tags
+  ...(runConfig.tags.length > 0 && {
+    grep: new RegExp(runConfig.tags.join("|")),
+  }),
+
+  // ✅ Exclude tests matching these tags
+  ...(runConfig.excludeTags.length > 0 && {
+    grepInvert: new RegExp(runConfig.excludeTags.join("|")),
+  }),
+
+  // "html" | "list" | "dot" | "json" | "line"
+  reporter: "html",
+
+  projects: (runConfig.projects as ProjectKey[]).map((p) => allProjects[p]),
+
   use: {
-    baseURL: BASE_URL,
-    navigationTimeout: 30_000,
+    baseURL: "https://www.saucedemo.com",
+    headless: !runConfig.headed,
+
+    // ✅ Max time for actions like click, fill, hover etc.
     actionTimeout: 10_000,
 
-    // Browser context
-    viewport: { width: 1280, height: 720 },
-    ignoreHTTPSErrors: true,
+    // ✅ Max time for page.goto() and navigations
+    navigationTimeout: 30_000,
 
-    // Debugging artifacts saved on failure
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     trace: "retain-on-failure",
-
-    // Locale
-    locale: "en-US",
-    timezoneId: "America/New_York",
   },
-
-  // ── Global Setup / Teardown ───────
-  globalSetup: "./src/config/global.setup.ts",
-  globalTeardown: "./src/config/global.teardown.ts",
-
-  // ── Projects (Browsers) ───────
-  projects: [
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"], headless: false },
-    },
-    {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"], headless: false },
-    },
-    {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"], headless: false },
-    },
-    {
-      name: "mobile-chrome",
-      use: { ...devices["Pixel 7"], headless: false },
-    },
-    {
-      name: "mobile-safari",
-      use: { ...devices["iPhone 14"], headless: false },
-    },
-    {
-      name: "api",
-      use: {
-        baseURL: process.env.API_BASE_URL ?? BASE_URL,
-        extraHTTPHeaders: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      },
-    },
-  ],
 });
