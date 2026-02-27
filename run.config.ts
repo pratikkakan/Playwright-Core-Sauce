@@ -1,3 +1,5 @@
+import type { Environment } from "./src/config/envrionments";
+
 // ✅ Define allowed project keys
 type ProjectKey =
   | "chromium"
@@ -36,4 +38,7 @@ export const runConfig = {
 
   // ✅ Retries on failure
   retries: 0,
+
+  // ✅ Only the environment KEY lives here — URLs are resolved in environments.ts
+  env: "prod" as Environment,
 };

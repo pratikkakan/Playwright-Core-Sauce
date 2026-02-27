@@ -1,15 +1,18 @@
 import dotenv from "dotenv";
 import * as path from "path";
+import { getEnvironmentConfig } from "./envrionments";
+import { runConfig } from "../../run.config";
+
+const { baseURL } = getEnvironmentConfig(runConfig.env);
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-if (!process.env.BASE_URL) {
+if (!baseURL) {
   throw new Error(
     "BASE_URL is not set. Copy .env.example to .env and fill in the values.",
   );
 }
 
-const BASE_URL = process.env.BASE_URL;
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
 
@@ -36,10 +39,10 @@ async function checkAppHealth(url: string): Promise<boolean> {
 async function globalSetup(): Promise<void> {
   console.log("🔧 Global Setup: Starting...");
 
-  const isAppHealthy = await checkAppHealth(BASE_URL);
+  const isAppHealthy = await checkAppHealth(baseURL);
   if (!isAppHealthy) {
     throw new Error(
-      `❌ Application at ${BASE_URL} is not reachable after ${MAX_RETRIES} attempts`,
+      `❌ Application at ${baseURL} is not reachable after ${MAX_RETRIES} attempts`,
     );
   }
 
