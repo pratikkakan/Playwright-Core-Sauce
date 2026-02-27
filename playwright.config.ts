@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 import { runConfig } from "./run.config";
+import { getEnvironmentConfig } from "./src/config/envrionments";
+
+const envConfig = getEnvironmentConfig(runConfig.env);
 
 const allProjects = {
   chromium: {
@@ -32,7 +35,6 @@ export default defineConfig({
   workers: runConfig.workers,
   fullyParallel: runConfig.fullyParallel,
 
-  // ✅ Run only the specified test files if provided
   ...(runConfig.testFiles.length > 0 && {
     testMatch: runConfig.testFiles,
   }),
@@ -64,7 +66,7 @@ export default defineConfig({
   projects: (runConfig.projects as ProjectKey[]).map((p) => allProjects[p]),
 
   use: {
-    baseURL: "https://www.saucedemo.com",
+    baseURL: envConfig.baseURL,
     headless: !runConfig.headed,
 
     // ✅ Max time for actions like click, fill, hover etc.
